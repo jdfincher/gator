@@ -1,4 +1,4 @@
-// Package config implements the json structs and methods for reading json structs
+// Package config implements basic user/database config from .gatorconfig.json
 package config
 
 import (
