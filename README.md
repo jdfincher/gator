@@ -21,7 +21,7 @@ In your home directory create a file called `.gatorconfig.json` and include the 
 
 If you don't already have Go and PostgreSQL installed do so now.
  >[Go Install](https://go.dev/doc/install)
-> [PostgreSQL install](https://www.postgresql.org/download/)
+ >[PostgreSQL install](https://www.postgresql.org/download/)
 
 Initialize the data cluster if this is a new postgres install, check paths/cmds for your distro
 ```bash
