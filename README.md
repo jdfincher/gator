@@ -112,7 +112,7 @@ Fetch all posts from feed urls in continuous loop with the time interval you set
 
 Finally browse posts sorted by published date with an optional "limit" argument to limit the amount of posts displayed at a time, the default is 2 if no argument is passed. 
 ```bash
-./ gator browse "limit"   #Returns 2 if limit amount omitted
+./gator browse "limit"   #Returns 2 if limit amount omitted
 ./gator browse 100 | less #Might want to pipe to a pager if viewing many
 ```
 
