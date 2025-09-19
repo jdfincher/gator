@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -112,10 +113,10 @@ func handlerUsers(s *state, cmd command) error {
 ░▀▀▀░▀▀▀░▀▀▀░▀░▀░▀▀▀` + "\n")
 	for i := range users {
 		if users[i].Name == s.cfg.UserName {
-			fmt.Printf("> %v (current)\n", users[i].Name)
+			fmt.Printf("» %v (current)\n", users[i].Name)
 			continue
 		}
-		fmt.Printf("> %v\n", users[i].Name)
+		fmt.Printf("» %v\n", users[i].Name)
 	}
 	return nil
 }
@@ -130,7 +131,11 @@ func handlerAgg(s *state, cmd command, user database.User) error {
 	}
 	ticker := time.NewTicker(reqInterval)
 	defer ticker.Stop()
-	fmt.Printf("Collecting feeds every %v\n", reqInterval)
+	fmt.Printf(`
+░█▀▀░█▀█░█░░░█░░░█▀▀░█▀▀░▀█▀░▀█▀░█▀█░█▀▀░░░█▀▀░█▀▀░█▀▀░█▀▄░█▀▀
+░█░░░█░█░█░░░█░░░█▀▀░█░░░░█░░░█░░█░█░█░█░░░█▀▀░█▀▀░█▀▀░█░█░▀▀█
+░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░░▀░░▀▀▀░▀░▀░▀▀▀░░░▀░░░▀▀▀░▀▀▀░▀▀░░▀▀▀` + "\n")
+	fmt.Printf("»»»» collection interval %v...\n", reqInterval)
 	for range ticker.C {
 		err := scrapeFeeds(s)
 		if err != nil {
@@ -178,18 +183,26 @@ func handlerFeeds(s *state, cmd command) error {
 	if feeds == nil {
 		return fmt.Errorf("error: there are no feeds to show! -> %w", err)
 	}
+	fmt.Printf(`
+ ░█▀▀░█▀▀░█▀▀░█▀▄░█▀▀
+ ░█▀▀░█▀▀░█▀▀░█░█░▀▀█
+ ░▀░░░▀▀▀░▀▀▀░▀▀░░▀▀▀` + "\n")
 	for i := range feeds {
 		name, err := s.db.GetUserByID(context.Background(), feeds[i].UserID)
 		if err != nil {
 			return fmt.Errorf("error: issue retrieving user name for feed record -> %w", err)
 		}
 		num := i + 1
-		fmt.Printf("----|Feed - %d|----\n", num)
-		fmt.Printf("%v\n", feeds[i].Name)
-		fmt.Printf("%v\n", feeds[i].Url)
-		fmt.Printf("%v\n", name)
+		// fmt.Printf("\n»»»» Feed - %d ««««\n", num)
+		fmt.Printf(`
++--------------------+
+| »»»» Feed - %d «««« |
++--------------------+`+"\n", num)
+		fmt.Printf("Name » %v\n", feeds[i].Name)
+		fmt.Printf("Url » %v\n", feeds[i].Url)
+		fmt.Printf("Added by » %v\n", name)
 	}
-	fmt.Printf("---|End of list|---\n")
+	fmt.Printf("\n")
 	return nil
 }
 
@@ -212,7 +225,11 @@ func handlerFollow(s *state, cmd command, user database.User) error {
 	if err != nil {
 		return fmt.Errorf("error: could not create feed follow record -> %w", err)
 	}
-	fmt.Printf("User: %v followed -> '%v'\n", cF.UserName, cF.FeedName)
+	fmt.Printf(`
+░█▀▀░█░█░█▀▀░█▀▀░█▀▀░█▀▀░█▀▀░█
+░▀▀█░█░█░█░░░█░░░█▀▀░▀▀█░▀▀█░▀
+░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀` + "\n")
+	fmt.Printf("»»»» User: %v followed » '%v'\n", cF.UserName, cF.FeedName)
 	return nil
 }
 
@@ -222,10 +239,14 @@ func handlerFollowing(s *state, cmd command, user database.User) error {
 		return fmt.Errorf("error: issue fetching follows for user from database -> %w", err)
 	}
 	tot := len(follows)
+	fmt.Printf(`
+░█▀▀░█▀█░█░░░█░░░█▀█░█░█░▀█▀░█▀█░█▀▀
+░█▀▀░█░█░█░░░█░░░█░█░█▄█░░█░░█░█░█░█
+░▀░░░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀░▀░▀▀▀░▀░▀░▀▀▀` + "\n")
 	for i := range follows {
 		num := i + 1
-		fmt.Printf("---|%v of %v|---\n", num, tot)
-		fmt.Printf("%v\n", follows[i].FeedName)
+		fmt.Printf("»»»» %v of %v ««««\n", num, tot)
+		fmt.Printf("- %v\n\n", follows[i].FeedName)
 	}
 	return nil
 }
@@ -246,6 +267,39 @@ func handlerUnfollow(s *state, cmd command, user database.User) error {
 		return fmt.Errorf("error: failed to cleanly remove follow record")
 	}
 	fmt.Printf("Successfully unfollowed %v\n", cmd.args[0])
+	return nil
+}
+
+func handlerBrowse(s *state, cmd command, user database.User) error {
+	var limit int32
+	if len(cmd.args) < 1 {
+		limit = 2
+	} else {
+		l, err := strconv.ParseInt(cmd.args[0], 10, 32)
+		if err != nil {
+			return fmt.Errorf("error: limit range on posts command unrecognized or invalid -> %w", err)
+		}
+		limit = int32(l)
+	}
+	postsToFetch := database.GetPostsForUserParams{
+		UserID: user.ID,
+		Limit:  limit,
+	}
+	posts, err := s.db.GetPostsForUser(context.Background(), postsToFetch)
+	if err != nil {
+		return fmt.Errorf("error: could not fetch posts -> %w", err)
+	}
+	fmt.Printf(`
+░█▀█░█▀▀░█░█░░░█▀█░█▀█░█▀▀░▀█▀░█▀▀
+░█░█░█▀▀░█▄█░░░█▀▀░█░█░▀▀█░░█░░▀▀█
+░▀░▀░▀▀▀░▀░▀░░░▀░░░▀▀▀░▀▀▀░░▀░░▀▀▀` + "\n\n")
+	for i := range posts {
+		fmt.Println(strings.Repeat("◈", 34))
+		fmt.Printf("»»»» %v\n", posts[i].Title)
+		fmt.Printf("»»» %v\n", posts[i].PublishedAt)
+		fmt.Printf("»» %v\n", posts[i].Url)
+		fmt.Printf("» %v\n\n", posts[i].Description)
+	}
 	return nil
 }
 
@@ -289,6 +343,7 @@ func main() {
 	coms.register("follow", middlewareLoggedIn(handlerFollow))
 	coms.register("following", middlewareLoggedIn(handlerFollowing))
 	coms.register("unfollow", middlewareLoggedIn(handlerUnfollow))
+	coms.register("browse", middlewareLoggedIn(handlerBrowse))
 
 	args := os.Args
 	if len(args) < 2 {

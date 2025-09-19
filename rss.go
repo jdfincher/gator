@@ -7,6 +7,8 @@ import (
 	"html"
 	"io"
 	"net/http"
+	"regexp"
+	"strings"
 	"time"
 )
 
@@ -33,7 +35,7 @@ func fetchFeed(ctx context.Context, feedurl string) (*RSSFeed, error) {
 		return feed, fmt.Errorf("error: request -> %w", err)
 	}
 	req.Header.Set("User-Agent", "gator")
-	client := &http.Client{Timeout: 5 * time.Second}
+	client := &http.Client{Timeout: 10 * time.Second}
 	res, err := client.Do(req)
 	if err != nil {
 		return feed, fmt.Errorf("error: response -> %w", err)
@@ -55,6 +57,15 @@ func (r *RSSFeed) unescapeHTML() {
 	r.Channel.Description = html.UnescapeString(r.Channel.Description)
 	for i := range r.Channel.Item {
 		r.Channel.Item[i].Title = html.UnescapeString(r.Channel.Item[i].Title)
+		r.Channel.Item[i].Title = normalizeSpaces(r.Channel.Item[i].Title)
 		r.Channel.Item[i].Description = html.UnescapeString(r.Channel.Item[i].Description)
+		r.Channel.Item[i].Description = normalizeSpaces(r.Channel.Item[i].Description)
 	}
+}
+
+var spaceRE = regexp.MustCompile(`\s+`)
+
+func normalizeSpaces(s string) string {
+	s = strings.TrimSpace(s)
+	return spaceRE.ReplaceAllString(s, " ")
 }
