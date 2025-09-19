@@ -57,7 +57,7 @@ func handlerLogin(s *state, cmd command) error {
 ░█░░░█▀█░█▀▀░█▀▀░█▀▀░█▀▄░░░▀█▀░█▀█
 ░█░░░█░█░█░█░█░█░█▀▀░█░█░░░░█░░█░█
 ░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀▀░░░░▀▀▀░▀░▀
-`+"---> %v\n", cmd.args[0])
+`+"---> %v\n\n", cmd.args[0])
 	return nil
 }
 
@@ -98,7 +98,13 @@ func handlerReset(s *state, cmd command) error {
 	if err != nil {
 		return fmt.Errorf("error: issue reseting users table -> %w", err)
 	}
-	fmt.Printf("users table was successfully cleared\n")
+	fmt.Printf(`
+░█▀▄░█▀█░▀█▀░█▀█░█▀▄░█▀█░█▀▀░█▀▀
+░█░█░█▀█░░█░░█▀█░█▀▄░█▀█░▀▀█░█▀▀
+░▀▀░░▀░▀░░▀░░▀░▀░▀▀░░▀░▀░▀▀▀░▀▀▀
+░█▀▀░█░░░█▀▀░█▀█░█▀▄░█▀▀░█▀▄░█░█
+░█░░░█░░░█▀▀░█▀█░█▀▄░█▀▀░█░█░▀░▀
+░▀▀▀░▀▀▀░▀▀▀░▀░▀░▀░▀░▀▀▀░▀▀░░▀░▀` + "\n\n")
 	return nil
 }
 
@@ -118,6 +124,7 @@ func handlerUsers(s *state, cmd command) error {
 		}
 		fmt.Printf("» %v\n", users[i].Name)
 	}
+	fmt.Printf("\n")
 	return nil
 }
 
@@ -193,7 +200,6 @@ func handlerFeeds(s *state, cmd command) error {
 			return fmt.Errorf("error: issue retrieving user name for feed record -> %w", err)
 		}
 		num := i + 1
-		// fmt.Printf("\n»»»» Feed - %d ««««\n", num)
 		fmt.Printf(`
 +--------------------+
 | »»»» Feed - %d «««« |
@@ -229,7 +235,7 @@ func handlerFollow(s *state, cmd command, user database.User) error {
 ░█▀▀░█░█░█▀▀░█▀▀░█▀▀░█▀▀░█▀▀░█
 ░▀▀█░█░█░█░░░█░░░█▀▀░▀▀█░▀▀█░▀
 ░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀` + "\n")
-	fmt.Printf("»»»» User: %v followed » '%v'\n", cF.UserName, cF.FeedName)
+	fmt.Printf("»»»» User: %v followed » '%v'\n\n", cF.UserName, cF.FeedName)
 	return nil
 }
 
@@ -242,11 +248,12 @@ func handlerFollowing(s *state, cmd command, user database.User) error {
 	fmt.Printf(`
 ░█▀▀░█▀█░█░░░█░░░█▀█░█░█░▀█▀░█▀█░█▀▀
 ░█▀▀░█░█░█░░░█░░░█░█░█▄█░░█░░█░█░█░█
-░▀░░░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀░▀░▀▀▀░▀░▀░▀▀▀` + "\n")
+░▀░░░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀░▀░▀▀▀░▀░▀░▀▀▀` + "\n\n")
 	for i := range follows {
 		num := i + 1
-		fmt.Printf("»»»» %v of %v ««««\n", num, tot)
-		fmt.Printf("- %v\n\n", follows[i].FeedName)
+		fmt.Printf("»»»» %v of %v\n", num, tot)
+		fmt.Printf("- %v\n", follows[i].FeedName)
+		fmt.Printf("- %v\n\n", follows[i].Url)
 	}
 	return nil
 }
